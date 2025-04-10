@@ -2,12 +2,13 @@ export function getKeyName(...args: string[]) {
   return `bites:${args.join(":")}`
 }
 
-export const restaurantKeyById = (id: string) => getKeyName("restaurant", id)
+export const restaurantKeyById = (id: string) => getKeyName("restaurant", id) // => bites:restaurant:restaurantId
 export const reviewKeyById = (id: string) => getKeyName("reviews", id)
 export const reviewDetailsKeyById = (id: string) => getKeyName("review_details", id)
-export const cuisinesKey = getKeyName("cuisines")
-export const cuisineKey = (name: string) => getKeyName("cuisine", name)
+export const cuisinesKey = getKeyName("cuisines") // => bite:cuisines
+export const cuisineKey = (name: string) => getKeyName("cuisine", name) // => bite:cuisine:cuisineName
 export const restaurantCuisinesKeyById = (id: string) => getKeyName("restaurant_cuisines", id)
+export const restaurantsByRatingKey = getKeyName("restaurants_by_rating")
 
 
 
@@ -21,8 +22,8 @@ export const restaurantCuisinesKeyById = (id: string) => getKeyName("restaurant_
   reviewKeyById: used to get a list of reviews corresponding to a restaurant by its ID
 
   Sets in Redis are unique strings, unorderedd collection
+*/
 
-  cuisinesKey: list of non-identical cuisines
-  cuisineKey: list of non-identical cuisines, each cuisine correspond to multiple restaurant IDs
-  restaurantCuisinesKeyById: used to get a set of cuisines that is available in a restaurant
+/*
+  bites:cuisine:French =/= bites:cuisines
 */
