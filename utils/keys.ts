@@ -9,6 +9,7 @@ export const cuisinesKey = getKeyName("cuisines") // => bite:cuisines
 export const cuisineKey = (name: string) => getKeyName("cuisine", name) // => bite:cuisine:cuisineName
 export const restaurantCuisinesKeyById = (id: string) => getKeyName("restaurant_cuisines", id)
 export const restaurantsByRatingKey = getKeyName("restaurants_by_rating")
+export const weatherKeyById = (id: string) => getKeyName("weather", id)
 
 
 

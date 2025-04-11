@@ -3,7 +3,7 @@ import { validate } from "../middlewares/validate.js"
 import { RestaurantSchema, type Restaurant } from "../schemas/restaurant.js"
 import { initializeRedisClient } from "../utils/client.js"
 import { nanoid } from "nanoid"
-import { cuisineKey, cuisinesKey, restaurantCuisinesKeyById, restaurantKeyById, restaurantsByRatingKey, reviewDetailsKeyById, reviewKeyById } from "../utils/keys.js"
+import { cuisineKey, cuisinesKey, restaurantCuisinesKeyById, restaurantKeyById, restaurantsByRatingKey, reviewDetailsKeyById, reviewKeyById, weatherKeyById } from "../utils/keys.js"
 import { errorResponse, successResponse } from "../utils/responses.js"
 import { checkRestaurantExists } from "../middlewares/checkRestaurantId.js"
 import { ReviewSchema, type Review } from "../schemas/review.js"
@@ -60,6 +60,41 @@ router.post("/", validate(RestaurantSchema), async (req, res, next) => {
     next(error)
   }
   res.send("Hello World")
+})
+
+router.get("/:restaurantId/weather", checkRestaurantExists, async (req: Request<{restaurantId: string}>, res, next) => {
+  const { restaurantId } = req.params
+
+  try {
+    const client = await initializeRedisClient()
+    const weatherKey = weatherKeyById(restaurantId)
+    // check if the weather data is cached in Redis
+    const cachedWeather = await client.get(weatherKey)
+    if (cachedWeather) {
+      console.log("Cache Hit");
+      // return the cached weather data
+      return successResponse(res, JSON.parse(cachedWeather))
+    }
+    const restaurantKey = restaurantKeyById(restaurantId)
+    const coordinates = await client.hGet(restaurantKey, "location")
+    if (!coordinates) {
+      return errorResponse(res, 404, "Coordinates have not been found")
+    }
+    const [lng, lat] = coordinates.split(",")
+    const apiResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?units=imperial&lat=${lat}&lon=${lng}&appid=${process.env.WEATHER_API_KEY}`)
+    if (apiResponse.status == 200) {
+      const json = await apiResponse.json()
+
+      // Set(cache) new weather data in Redis
+      await client.set(weatherKey, JSON.stringify(json), {
+        EX: 60 * 60
+      })
+      return successResponse(res, json)
+    }
+    return errorResponse(res, 500, "Could not fetch weather info")
+  } catch (error) {
+    next(error)
+  }
 })
 
 router.post(
