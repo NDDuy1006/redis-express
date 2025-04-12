@@ -1,9 +1,9 @@
 import express, { type Request } from "express"
 import { validate } from "../middlewares/validate.js"
-import { RestaurantSchema, type Restaurant } from "../schemas/restaurant.js"
+import { RestaurantDetailsSchema, RestaurantSchema, type Restaurant } from "../schemas/restaurant.js"
 import { initializeRedisClient } from "../utils/client.js"
 import { nanoid } from "nanoid"
-import { cuisineKey, cuisinesKey, restaurantCuisinesKeyById, restaurantKeyById, restaurantsByRatingKey, reviewDetailsKeyById, reviewKeyById, weatherKeyById } from "../utils/keys.js"
+import { cuisineKey, cuisinesKey, restaurantCuisinesKeyById, restaurantDetailsKeyById, restaurantKeyById, restaurantsByRatingKey, reviewDetailsKeyById, reviewKeyById, weatherKeyById } from "../utils/keys.js"
 import { errorResponse, successResponse } from "../utils/responses.js"
 import { checkRestaurantExists } from "../middlewares/checkRestaurantId.js"
 import { ReviewSchema, type Review } from "../schemas/review.js"
@@ -96,6 +96,44 @@ router.get("/:restaurantId/weather", checkRestaurantExists, async (req: Request<
     next(error)
   }
 })
+
+// cache restaurant details in JSON format
+router.post(
+  "/:restaurantId/details",
+  checkRestaurantExists,
+  validate(RestaurantDetailsSchema),
+  async (req: Request<{restaurantId: string}>, res, next) => {
+    const { restaurantId } = req.params
+    const data = req.body as Restaurant
+
+    try {
+      const client = await initializeRedisClient()
+      const restaurantDetailsKey = restaurantDetailsKeyById(restaurantId)
+      await client.json.set(restaurantDetailsKey, ".", data)
+      return successResponse(res, {}, "Restaurant details added")
+    } catch (error) {
+      next(error)
+    }
+  }
+)
+
+router.get(
+  "/:restaurantId/details",
+  checkRestaurantExists,
+  async (req: Request<{restaurantId: string}>, res, next) => {
+    const { restaurantId } = req.params
+    const data = req.body as Restaurant
+
+    try {
+      const client = await initializeRedisClient()
+      const restaurantDetailsKey = restaurantDetailsKeyById(restaurantId)
+      const details = await client.json.get(restaurantDetailsKey)
+      return successResponse(res, details, "Restaurant details added")
+    } catch (error) {
+      next(error)
+    }
+  }
+)
 
 router.post(
   "/:restaurantId/reviews",

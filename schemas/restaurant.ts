@@ -6,7 +6,7 @@ export const RestaurantSchema = z.object({
   cuisines: z.array(z.string().min(1))
 })
 
-export const RestaurantDetails = z.object({
+export const RestaurantDetailsSchema = z.object({
   links: z.array(z.object({
     name: z.string().min(1),
     url: z.string().min(1)
@@ -18,4 +18,4 @@ export const RestaurantDetails = z.object({
 })
 
 export type Restaurant = z.infer<typeof RestaurantSchema>
-export type RestaurantDetails = z.infer<typeof RestaurantDetails>
+export type RestaurantDetails = z.infer<typeof RestaurantDetailsSchema>
